@@ -4,31 +4,41 @@ import os
 
 app = Flask(__name__)
 
-API_KEY = os.getenv("OPENWEATHER_API_KEY")
+# Get API key from environment variable
+API_KEY = os.environ.get("WEATHER_API_KEY")
+if not API_KEY:
+    raise ValueError("Please set the WEATHER_API_KEY environment variable.")
 
-@app.route("/")
-def home():
-    return "Weather App CI/CD with Jenkins & Docker"
-
-@app.route("/weather")
+@app.route('/')
 def get_weather():
-    city = request.args.get("city")
+    # Get city from query parameter; default is 'London'
+    city = request.args.get('city')
     if not city:
-        return jsonify({"error": "City parameter is required"}), 400
+        return jsonify({"error": "Please provide a city name in the URL, e.g., ?city=London"}), 400
 
-    url = f"https://api.openweathermap.org/data/2.5/weather?q={city}&appid={API_KEY}&units=metric"
+    # Call OpenWeatherMap API
+    url = f"http://api.openweathermap.org/data/2.5/weather?q={city}&appid={API_KEY}&units=metric"
     response = requests.get(url)
 
+    # Handle invalid city or API errors
     if response.status_code != 200:
-        return jsonify({"error": "City not found"}), 404
+        return jsonify({"error": f"Could not fetch weather for '{city}'. Please check the city name."}), 400
 
-    data = response.json()
-    return jsonify({
-        "city": data["name"],
-        "temperature": data["main"]["temp"],
-        "weather": data["weather"][0]["description"]
-    })
+    data_json = response.json()
+
+    # Prepare response data
+    data = {
+        "city": city.title(),
+        "temperature": f"{data_json['main']['temp']}°C",
+        "weather": data_json['weather'][0]['description'].title(),
+        "humidity": f"{data_json['main']['humidity']}%",
+        "wind": f"{data_json['wind']['speed']} km/h"
+    }
+
+    return jsonify(data)
 
 if __name__ == "__main__":
+    # Flask app runs on port 5000 inside container
     app.run(host="0.0.0.0", port=5000)
+
 
