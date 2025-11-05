@@ -24,8 +24,29 @@ pipeline {
                 sh 'docker push srujanaelukurthi/weather-app:latest'
             }
         }
+
+        stage('Run Docker Container') {
+            steps {
+                // Stop & remove any existing container
+                sh 'docker stop weather-app || true'
+                sh 'docker rm weather-app || true'
+
+                // Run the container on host port 5001
+                sh 'docker run -d -p 5001:5000 --name weather-app srujanaelukurthi/weather-app:latest'
+            }
+        }
+    }
+
+    post {
+        success {
+            echo 'Weather App CI/CD Pipeline Succeeded! Open http://localhost:5001 to access it.'
+        }
+        failure {
+            echo 'Pipeline Failed!'
+        }
     }
 }
+
 
             
         
