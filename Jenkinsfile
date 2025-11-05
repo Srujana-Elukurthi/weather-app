@@ -6,12 +6,6 @@ pipeline {
     }
 
     stages {
-        stage('Clone Repo') {
-            steps {
-                git 'https://github.com/Srujana-Elukurthi/weather-app.git'
-            }
-        }
-
         stage('Build Docker Image') {
             steps {
                 sh 'docker build -t weather-app .'
@@ -32,5 +26,10 @@ pipeline {
         }
     }
 }
+
+            
+        
+   
+
 
 
